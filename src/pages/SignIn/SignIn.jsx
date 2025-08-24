@@ -1,6 +1,6 @@
 import { React, useState } from "react";
 import styles from "./SignIn.module.scss";
-import Navbar from "../ComComponent/Navbar/Navbar";
+import Navbar from "../ComComponent/Navbar/NewNavbar";
 import googleLogo from "/googleLogo.svg";
 import { jwtDecode } from "jwt-decode";
 import { GoogleLogin } from "@react-oauth/google";
