@@ -2,17 +2,13 @@ import styles from "./YourSignings.module.scss";
 import Navbar from "../ComComponent/Navbar/Navbar";
 import ErrorModal from "../ComComponent/ErrorModal/ErrorModal";
 
-import axios from "axios";
-import { apiBaseURL } from "../../global";
 import {
   useLoaderData,
-  redirect,
   useSubmit,
   useActionData,
   useNavigation,
 } from "react-router";
 import { useState } from "react";
-import { getAccessToken, getRefreshToken } from "../../assets/utils/auth.js";
 
 function YourSignings() {
   const [errorModal, setErrorModal] = useState(true);
@@ -174,88 +170,28 @@ function YourSignings() {
 export default YourSignings;
 
 export async function loader() {
-  const refreshToken = getRefreshToken();
-  const accessToken = getAccessToken();
-
-  if (!refreshToken || !accessToken) {
-    redirect("/signin");
-    return { isError: true, message: "Token is missing" };
-  }
-
-  try {
-    const response = await axios.get(`${apiBaseURL}/api/tickets`, {
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return {
-      isError: false,
-      data: response.data,
-      message: "Signings fetched successfully",
+    const dummySignings = {
+        prof_show_tickets: [
+            { ticket_id: 1, show_name: "Dummy Prof Show 1", price: 500, cancelled: false, cancellable: true },
+            { ticket_id: 2, show_name: "Dummy Prof Show 2", price: 600, cancelled: true, cancellable: false },
+        ],
+        non_comp_tickets: [
+            { ticket_id: 3, non_comp_name: "Dummy Event 1", price: 100, cancelled: false, cancellable: true },
+            { ticket_id: 4, non_comp_name: "Dummy Event 2", price: 150, cancelled: false, cancellable: false },
+        ],
     };
-  } catch (error) {
+
     return {
-      isError: true,
-      message:
-        error.response?.data || "An error occurred while fetching signings",
+        isError: false,
+        data: dummySignings,
+        message: "Dummy signings fetched successfully",
     };
-  }
 }
 
 export async function action({ request }) {
-  const formData = await request.formData();
-  const refreshToken = getRefreshToken();
-  const accessToken = getAccessToken();
-
-  if (!refreshToken || !accessToken) {
-    redirect("/signin");
-    return { isError: true, message: "Token is missing" };
-  }
-
-  try {
-    if (formData.has("prof_show_ticket_id")) {
-      const response = await axios.post(
-        `${apiBaseURL}/api/prof-show-cancel/${formData.get(
-          "prof_show_ticket_id"
-        )}/`,
-        {
-          access_token: accessToken,
-          prof_show_ticket_id: formData.get("prof_show_ticket_id"),
-        },
-        {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-    } else {
-      const response = await axios.post(
-        `${apiBaseURL}/api/non-comp-cancel/${formData.get(
-          "non_comp_ticket_id"
-        )}/`,
-        {
-          access_token: accessToken,
-          non_comp_ticket_id: formData.get("non_comp_ticket_id"),
-        },
-        {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-    }
+    console.log("Dummy action, not cancelling ticket.");
     return {
-      isError: false,
-      message: "Ticket cancelled successfully",
+        isError: false,
+        message: "This is a dummy action. Ticket not cancelled.",
     };
-  } catch (error) {
-    return {
-      isError: true,
-      message:
-        error.response?.data || "An error occurred while cancelling the ticket",
-    };
-  }
 }

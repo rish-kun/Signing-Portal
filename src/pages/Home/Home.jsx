@@ -1,81 +1,26 @@
-import { Link, useNavigate, useLoaderData } from "react-router-dom";
+import { Link } from "react-router-dom";
 import styles from "./Home.module.scss";
 import Navbar from "../ComComponent/Navbar/Navbar";
-import axios from "axios";
-import { AppContext } from "../../App";
-import { useContext, useEffect, useState } from "react";
-import { apiBaseURL } from "../../global";
-import {
-    getRefreshToken,
-    UpdateAccessToken,
-    logoutAction,
-    accessTokenDuration,
-    refreshTokenDuration,
-    checkAccessToken,
-    checkRefreshToken,
-} from "../../assets/utils/auth.js";
+import { useEffect, useState } from "react";
 
 function Home() {
     const [activeTab, setActiveTab] = useState(0);
     const [eventList, setEventList] = useState(null);
     const [profShowList, setProfShowList] = useState(null);
-    const refreshToken = getRefreshToken();
-    const accessToken = useLoaderData();
     const eventContGap = 30;
-    const [emptyEventsMsg, setEmptyEventsMsg] = useState("Please wait while we load the list of available events.");
-    const [emptyProfShowMsg, setEmptyProfShowMsg] = useState("Please wait while we load the list of available prof shows.");
-
-    const navigate = useNavigate();
-    useEffect(() => {
-        if (!refreshToken || !accessToken) {
-            logoutAction();
-            navigate("/signin");
-            return;
-        }
-
-        checkAccessToken();
-
-        if (checkRefreshToken() === "EXPIRED") {
-            logoutAction();
-            navigate("/signin");
-            return;
-        }
-
-        const accessTokenTimer = setTimeout(() => {
-            UpdateAccessToken();
-        }, accessTokenDuration());
-
-        const refreshTokenTimer = setTimeout(() => {
-            if (checkRefreshToken() === "EXPIRED") {
-                logoutAction();
-                navigate("/signin");
-            }
-        }, refreshTokenDuration());
-
-        return () => {
-            clearTimeout(accessTokenTimer);
-            clearTimeout(refreshTokenTimer);
-        };
-    }, [refreshToken, accessToken]);
 
     useEffect(() => {
-        axios.get(`${apiBaseURL}/api/shows`, {
-            headers: {
-                accept: 'application/json',
-                Authorization: `Bearer ${accessToken}`
-            }}
-        ).then((response) => {
-            if (response.data.non_comp_events.length == 0) setEmptyEventsMsg("Looks like there are no available events at this moment.")
-            else setEventList(response.data.non_comp_events.reverse());
+        const dummyProfShows = [
+            { id: 1, name: "Dummy Prof Show 1", description: "This is a dummy prof show." },
+            { id: 2, name: "Dummy Prof Show 2", description: "This is another dummy prof show." },
+        ];
+        const dummyEvents = [
+            { id: 1, name: "Dummy Event 1", description: "This is a dummy event." },
+            { id: 2, name: "Dummy Event 2", description: "This is another dummy event." },
+        ];
 
-            if (response.data.prof_shows.length == 0) setEmptyProfShowMsg("Looks like there are no available prof shows at this moment")
-            else setProfShowList(response.data.prof_shows.reverse());
-
-        }).catch((errResponse) => {
-            setEmptyEventsMsg(`Something went wrong in recieveing the available events.`);
-            setEmptyProfShowMsg(`Something went wrong in recieving the available prof shows.`);
-            console.log(errResponse)
-        })
+        setProfShowList(dummyProfShows);
+        setEventList(dummyEvents);
 
         const eventContElem = document.getElementById("eventCont");
         eventContElem.addEventListener("scrollend", (event) => {
@@ -112,8 +57,7 @@ function Home() {
                                     </Link>
                                 </div>
                             </div>
-                        )) ||
-                        <div className={styles.emptyContentMessage}>{emptyProfShowMsg}</div>}
+                        )) || <div className={styles.emptyContentMessage}>No prof shows available.</div>}
                     </div>
                     <div className={styles.eventListContainer}>
                         {eventList?.map((event, index) => (
@@ -122,14 +66,13 @@ function Home() {
                                     <div className={styles.eventTitle}>{event.name}</div>
                                     <div className={styles.eventDesc}>{event.description}</div>
                                 </div>
-                                <div className={styles.eventRight}>
+                                <div className_={styles.eventRight}>
                                     <Link className={styles.eventLink} to={`/EventDetails/non-comp/${event.id}`}>
                                     View Details
                                     </Link>
                                 </div>
                             </div>
-                        )) ||
-                        <div className={styles.emptyContentMessage}>{emptyEventsMsg}</div>}
+                        )) || <div className={styles.emptyContentMessage}>No events available.</div>}
                     </div>
                 </div>
             </div>

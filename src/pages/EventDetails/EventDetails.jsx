@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./EventDetails.module.scss";
-import axios from "axios";
 import Navbar from "../ComComponent/Navbar/Navbar";
-import { apiBaseURL } from "../../global";
-import { getAccessToken } from "../../assets/utils/auth.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronDown,
@@ -14,7 +11,6 @@ import {
 
 function EventDetails() {
   const { eventType, eventIndex } = useParams();
-  const accessToken = getAccessToken();
   const navigate = useNavigate();
 
   const [event, setEvent] = useState(null);
@@ -27,33 +23,59 @@ function EventDetails() {
   const [activeDateTab, setActiveDateTab] = useState(0);
 
   useEffect(() => {
-    let endpoint = "";
+    setLoading(true);
+    setError(null);
+
+    let dummyEvent;
     if (eventType === "prof-show") {
-      endpoint = `/api/prof-show/${eventIndex}/`;
+      dummyEvent = {
+        name: `Dummy Prof Show ${eventIndex}`,
+        Artist: "Dummy Artist",
+        description: "This is a dummy prof show description.",
+        start_time: "2025-01-01T20:00:00Z",
+        end_time: "2025-01-01T22:00:00Z",
+        price: 500,
+      };
     } else if (eventType === "non-comp") {
-      endpoint = `/api/non-comp/${eventIndex}/`;
+      dummyEvent = {
+        non_comp_name: `Dummy Event ${eventIndex}`,
+        description: "This is a dummy non-competitive event description.",
+        dates: [
+          {
+            date: "2025-01-02",
+            slots: [
+              {
+                slot_id: 1,
+                venue: "Dummy Venue 1",
+                start_time: "10:00:00",
+                end_time: "12:00:00",
+                is_openforsignings: true,
+                ticket_types: [
+                  { ticket_type_id: 1, ticket_type_name: "Type A", price: 100 },
+                  { ticket_type_id: 2, ticket_type_name: "Type B", price: 150 },
+                ],
+              },
+              {
+                slot_id: 2,
+                venue: "Dummy Venue 2",
+                start_time: "14:00:00",
+                end_time: "16:00:00",
+                is_openforsignings: false,
+                ticket_types: [],
+              },
+            ],
+          },
+        ],
+      };
     } else {
       setError("Invalid event type.");
       setLoading(false);
       return;
     }
 
-    axios
-      .get(`${apiBaseURL}${endpoint}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          accept: "application/json",
-        },
-      })
-      .then((response) => {
-        setEvent(response.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Event not found or unauthorized.");
-        setLoading(false);
-      });
-  }, [eventType, eventIndex, accessToken]);
+    setEvent(dummyEvent);
+    setLoading(false);
+  }, [eventType, eventIndex]);
 
   const handleSlotToggle = (slotId) => {
     setOpenSlotIds((prev) => (prev.includes(slotId) ? [] : [slotId]));
@@ -81,25 +103,8 @@ function EventDetails() {
   const handleProfShowBuy = async () => {
     const count = ticketCounts["profshow"] || 0;
     if (count < 1) return alert("Select at least one ticket.");
-    try {
-      const formData = new FormData();
-      formData.append("ticket", count);
-
-      await axios.post(
-        `${apiBaseURL}/api/prof-show/${eventIndex}/buy/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            accept: "application/json",
-          },
-        }
-      );
-      alert("Tickets purchased successfully!");
-      navigate("/yoursignings");
-    } catch (err) {
-      alert(err.response?.data?.error || "Purchase failed.");
-    }
+    alert(`Dummy purchase of ${count} tickets for prof show. Navigating to Your Signings.`);
+    navigate("/yoursignings");
   };
 
   const handleNonCompBuy = async (slot) => {
@@ -107,29 +112,8 @@ function EventDetails() {
     const count = ticketCounts[slot.slot_id] || 0;
     if (!selectedTypeId) return alert("Select a ticket type.");
     if (count < 1) return alert("Select at least one ticket.");
-    try {
-      const formData = new FormData();
-      formData.append("tickets", count);
-      await axios.post(
-        `${apiBaseURL}/api/non-comp-ticket/${selectedTypeId}/buy/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            accept: "application/json",
-          },
-        }
-      );
-      alert("Tickets purchased successfully!");
-      navigate("/yoursignings");
-    } catch (err) {
-      alert(
-        `Failed for ${
-          slot.ticket_types.find((t) => t.ticket_type_id === selectedTypeId)
-            ?.ticket_type_name || "Ticket"
-        }: ` + (err.response?.data?.error || "Purchase failed.")
-      );
-    }
+    alert(`Dummy purchase of ${count} tickets for slot ${slot.slot_id}. Navigating to Your Signings.`);
+    navigate("/yoursignings");
   };
 
   if (loading) return <div>Loading...</div>;
