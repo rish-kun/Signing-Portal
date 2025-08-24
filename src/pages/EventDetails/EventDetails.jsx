@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import styles from "./EventDetails.module.scss";
 import axios from "axios";
-import Navbar from "../ComComponent/Navbar/Navbar";
+import Navbar from "../ComComponent/Navbar/NewNavbar";
 import { apiBaseURL } from "../../global";
 import { getAccessToken } from "../../assets/utils/auth.js";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  faChevronDown,
-  faChevronUp,
-  faChevronLeft,
-} from "@fortawesome/free-solid-svg-icons";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronLeft, Plus, Minus } from "lucide-react";
 
 function EventDetails() {
   const { eventType, eventIndex } = useParams();
@@ -20,8 +30,6 @@ function EventDetails() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("about");
-  const [openSlotIds, setOpenSlotIds] = useState([]);
   const [selectedTicketType, setSelectedTicketType] = useState({});
   const [ticketCounts, setTicketCounts] = useState({});
   const [activeDateTab, setActiveDateTab] = useState(0);
@@ -54,10 +62,6 @@ function EventDetails() {
         setLoading(false);
       });
   }, [eventType, eventIndex, accessToken]);
-
-  const handleSlotToggle = (slotId) => {
-    setOpenSlotIds((prev) => (prev.includes(slotId) ? [] : [slotId]));
-  };
 
   const handleTicketTypeChange = (slotId, ticketTypeId) => {
     setSelectedTicketType((prev) => ({
@@ -132,8 +136,8 @@ function EventDetails() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error || !event) return <div>{error || "Event not found."}</div>;
+  if (loading) return <div className="container mx-auto px-4 md:px-6 py-8">Loading...</div>;
+  if (error || !event) return <div className="container mx-auto px-4 md:px-6 py-8">{error || "Event not found."}</div>;
 
   // prof-show layout
   if (eventType === "prof-show") {
@@ -146,112 +150,93 @@ function EventDetails() {
         },
       ];
       return (
-        <div className={styles.ticketsContent}>
+        <div className="space-y-4">
           {tickets.map((tt) => (
-            <div className={styles.ticketItem} key={tt.ticket_type_id}>
-              <div className={styles.ticketInfo}>
-                <div>{tt.ticket_type_name}</div>
-                <div className={styles.ticketPrice}>₹{tt.price}</div>
-              </div>
-              <div className={styles.ticketCounter}>
-                <button
-                  onClick={() =>
-                    setTicketCounts((prev) => ({
-                      ...prev,
-                      [tt.ticket_type_id]: Math.max(
-                        0,
-                        (prev[tt.ticket_type_id] || 0) - 1
-                      ),
-                    }))
-                  }
-                  disabled={ticketCounts[tt.ticket_type_id] === 0}
-                >
-                  -
-                </button>
-                <span className={styles.counterValue}>
-                  {ticketCounts[tt.ticket_type_id] || 0}
-                </span>
-                <button
-                  onClick={() =>
-                    setTicketCounts((prev) => ({
-                      ...prev,
-                      [tt.ticket_type_id]: (prev[tt.ticket_type_id] || 0) + 1,
-                    }))
-                  }
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            <Card key={tt.ticket_type_id}>
+              <CardContent className="flex items-center justify-between p-4">
+                <div>
+                  <div className="font-semibold">{tt.ticket_type_name}</div>
+                  <div className="text-muted-foreground">₹{tt.price}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleTicketCount(tt.ticket_type_id, -1)}
+                    disabled={(ticketCounts[tt.ticket_type_id] || 0) === 0}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span>{ticketCounts[tt.ticket_type_id] || 0}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleTicketCount(tt.ticket_type_id, 1)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-          <button
-            className={styles.buyTicketsButton}
+          <Button
+            className="w-full"
             onClick={handleProfShowBuy}
-            disabled={ticketCounts["profshow"] === 0}
+            disabled={(ticketCounts["profshow"] || 0) === 0}
           >
             Buy Tickets
-          </button>
+          </Button>
         </div>
       );
     };
 
     const renderAbout = () => (
-      <div className={styles.aboutContent}>
-        <div className={styles.aboutSection}>
-          <div className={styles.aboutLabel}>Artist:</div>
-          <div className={styles.aboutValue}>{event.Artist}</div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="font-semibold">Artist</div>
+          <div>{event.Artist}</div>
         </div>
-        <div className={styles.aboutSection}>
-          <div className={styles.aboutLabel}>Description:</div>
-          <div className={styles.aboutValue}>{event.description}</div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="font-semibold">Description</div>
+          <div>{event.description}</div>
         </div>
-        <div className={styles.aboutSection}>
-          <div className={styles.aboutLabel}>Start Time:</div>
-          <div className={styles.aboutValue}>{event.start_time}</div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="font-semibold">Start Time</div>
+          <div>{event.start_time}</div>
         </div>
-        <div className={styles.aboutSection}>
-          <div className={styles.aboutLabel}>End Time:</div>
-          <div className={styles.aboutValue}>{event.end_time}</div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="font-semibold">End Time</div>
+          <div>{event.end_time}</div>
         </div>
       </div>
     );
 
     return (
-      <div style={{ position: "relative" }}>
+      <div>
         <Navbar />
-        <div className={styles.eventDetailsContent}>
-          <button className={styles.backButton} onClick={() => navigate("/")}>
-            <FontAwesomeIcon
-              icon={faChevronLeft}
-              style={{ marginRight: "0.5em" }}
-            />
+        <div className="container mx-auto px-4 md:px-6 py-8">
+          <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
+            <ChevronLeft className="mr-2 h-4 w-4" />
             Go Back
-          </button>
-          <div className={styles.eventTitle}>{event.name}</div>
-          <div className={styles.eventDateAndTime}>
-            {event.start_time || ""}
-          </div>
-          <div className={styles.eventDetailsContainer}>
-            <div className={styles.tabContainer}>
-              <button
-                className={activeTab === "about" ? styles.activeTab : ""}
-                onClick={() => setActiveTab("about")}
-              >
-                About
-              </button>
-              <button
-                className={activeTab === "tickets" ? styles.activeTab : ""}
-                onClick={() => setActiveTab("tickets")}
-              >
-                Tickets
-              </button>
-            </div>
-            <hr className={styles.separatorLine} />
-            <div className={styles.tabContent}>
-              {activeTab === "about" && renderAbout()}
-              {activeTab === "tickets" && renderTickets()}
-            </div>
-          </div>
+          </Button>
+          <h1 className="text-3xl font-bold">{event.name}</h1>
+          <p className="text-muted-foreground">{event.start_time || ""}</p>
+          <Card className="mt-6">
+            <CardHeader>
+              <Tabs defaultValue="about">
+                <TabsList>
+                  <TabsTrigger value="about">About</TabsTrigger>
+                  <TabsTrigger value="tickets">Tickets</TabsTrigger>
+                </TabsList>
+                <TabsContent value="about" className="pt-4">
+                  {renderAbout()}
+                </TabsContent>
+                <TabsContent value="tickets" className="pt-4">
+                  {renderTickets()}
+                </TabsContent>
+              </Tabs>
+            </CardHeader>
+          </Card>
         </div>
       </div>
     );
@@ -259,132 +244,87 @@ function EventDetails() {
 
   // non-comp layout 
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <Navbar />
-      <div className={styles.eventDetailsContent}>
-        <button className={styles.backButton} onClick={() => navigate("/")}>
-          <FontAwesomeIcon
-            icon={faChevronLeft}
-            style={{ marginRight: "0.5em" }}
-          />
+      <div className="container mx-auto px-4 md:px-6 py-8">
+        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
+          <ChevronLeft className="mr-2 h-4 w-4" />
           Go Back
-        </button>
-        <div className={styles.eventTitle}>{event.non_comp_name}</div>
-        <div className={`${styles.eventDetailsContainer} ${styles.nonCompContainer}`}>
-          <div className={styles.tabContainer}>
-            {event.dates.map((dateObj, idx) => (
-              <button
-                key={dateObj.date}
-                className={activeDateTab === idx ? styles.activeTab : ""}
-                onClick={() => setActiveDateTab(idx)}
-              >
-                {dateObj.date}
-              </button>
-            ))}
-          </div>
-          <hr className={styles.separatorLine} />
-          <div className={styles.tabContent} style={{ paddingTop: 0 }}>
-            <div className={styles.aboutContent}>
-              <div className={styles.aboutSection}>
-                <div className={styles.aboutLabel}>Description</div>
-                <div className={styles.aboutValue}>{event.description}</div>
-              </div>
-              <div className={styles.aboutSection}>
-                <div className={styles.aboutLabel}>Slots</div>
-                <div className={styles.aboutSlots}>
-                  {event.dates[activeDateTab]?.slots.length > 0 ? (
-                    event.dates[activeDateTab].slots.map((slot) => (
-                      <div key={slot.slot_id} className={styles.slotBoxWrapper}>
-                        <button
-                          className={styles.slotBox}
-                          style={{
-                            opacity: slot.is_openforsignings ? 1 : 0.5,
-                            cursor: slot.is_openforsignings
-                              ? "pointer"
-                              : "not-allowed",
-                          }}
-                          onClick={() => handleSlotToggle(slot.slot_id)}
-                        >
-                          <div>
-                            <strong>Venue:</strong> {slot.venue}
-                            <br />
-                            <strong>Start:</strong> {slot.start_time}
-                            <br />
-                            <strong>End:</strong> {slot.end_time}
-                          </div>
-                          <FontAwesomeIcon
-                            icon={
-                              openSlotIds.includes(slot.slot_id)
-                                ? faChevronUp
-                                : faChevronDown
-                            }
-                            className={
-                              openSlotIds.includes(slot.slot_id)
-                                ? styles.chevronIconOpen
-                                : styles.chevronIcon
-                            }
-                          />
-                        </button>
-                        {openSlotIds.includes(slot.slot_id) && (
-                          <div className={styles.ticketsContent}>
-                            {slot.is_openforsignings ? (
-                              slot.ticket_types &&
-                              slot.ticket_types.length > 0 ? (
-                                <div>
-                                  <select
-                                    className={styles.ticketTypeDropdown}
-                                    value={
-                                      selectedTicketType[slot.slot_id] || ""
-                                    }
-                                    onChange={(e) =>
-                                      handleTicketTypeChange(
-                                        slot.slot_id,
-                                        e.target.value
-                                      )
-                                    }
-                                  >
-                                    <option value="" disabled>
-                                      Select Ticket Type
-                                    </option>
-                                    {slot.ticket_types.map((tt) => (
-                                      <option
-                                        key={tt.ticket_type_id}
-                                        value={tt.ticket_type_id}
-                                      >
-                                        {tt.ticket_type_name} (₹{tt.price})
-                                      </option>
-                                    ))}
-                                  </select>
-                                  {selectedTicketType[slot.slot_id] && (
-                                    <>
-                                      <div className={styles.ticketItem}>
-                                        <div className={styles.ticketInfo}>
-                                          <div>
-                                            {
-                                              slot.ticket_types.find(
-                                                (t) =>
-                                                  t.ticket_type_id ===
-                                                  selectedTicketType[
-                                                    slot.slot_id
-                                                  ]
-                                              )?.ticket_type_name
-                                            }
-                                          </div>
-                                          <div className={styles.ticketPrice}>
-                                            Quantity:
-                                            {
-                                              slot.ticket_types.find(
-                                                (t) =>
-                                                  t.ticket_type_id ===
-                                                  selectedTicketType[
-                                                    slot.slot_id
-                                                  ]
-                                              )?.price
-                                            }
-                                          </div>
-                                        </div>
-                                        <div className={styles.ticketCounter}>
-                                          <button
+        </Button>
+        <h1 className="text-3xl font-bold">{event.non_comp_name}</h1>
+        <Card className="mt-6">
+          <CardHeader>
+            <Tabs
+              defaultValue={event.dates[0].date}
+              onValueChange={(value) =>
+                setActiveDateTab(
+                  event.dates.findIndex((d) => d.date === value)
+                )
+              }
+            >
+              <TabsList>
+                {event.dates.map((dateObj) => (
+                  <TabsTrigger key={dateObj.date} value={dateObj.date}>
+                    {dateObj.date}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value={event.dates[activeDateTab].date} className="pt-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold">Description</h3>
+                    <p className="text-muted-foreground">{event.description}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Slots</h3>
+                    {event.dates[activeDateTab]?.slots.length > 0 ? (
+                      <Accordion type="single" collapsible className="w-full">
+                        {event.dates[activeDateTab].slots.map((slot) => (
+                          <AccordionItem key={slot.slot_id} value={slot.slot_id}>
+                            <AccordionTrigger
+                              disabled={!slot.is_openforsignings}
+                            >
+                              <div>
+                                <strong>Venue:</strong> {slot.venue}
+                                <br />
+                                <strong>Start:</strong> {slot.start_time}
+                                <br />
+                                <strong>End:</strong> {slot.end_time}
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              {slot.is_openforsignings ? (
+                                slot.ticket_types &&
+                                slot.ticket_types.length > 0 ? (
+                                  <div className="space-y-4">
+                                    <Select
+                                      onValueChange={(value) =>
+                                        handleTicketTypeChange(
+                                          slot.slot_id,
+                                          value
+                                        )
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select Ticket Type" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {slot.ticket_types.map((tt) => (
+                                          <SelectItem
+                                            key={tt.ticket_type_id}
+                                            value={tt.ticket_type_id}
+                                          >
+                                            {tt.ticket_type_name} (₹{tt.price})
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    {selectedTicketType[slot.slot_id] && (
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
                                             onClick={() =>
                                               handleTicketCount(
                                                 slot.slot_id,
@@ -392,57 +332,56 @@ function EventDetails() {
                                               )
                                             }
                                             disabled={
-                                              ticketCounts[slot.slot_id] === 0
+                                              (ticketCounts[slot.slot_id] || 0) === 0
                                             }
                                           >
-                                            -
-                                          </button>
-                                          <span className={styles.counterValue}>
+                                            <Minus className="h-4 w-4" />
+                                          </Button>
+                                          <span>
                                             {ticketCounts[slot.slot_id] || 0}
                                           </span>
-                                          <button
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
                                             onClick={() =>
                                               handleTicketCount(slot.slot_id, 1)
                                             }
                                           >
-                                            +
-                                          </button>
+                                            <Plus className="h-4 w-4" />
+                                          </Button>
                                         </div>
-                                      </div>
-                                      <div className={styles.buyButtonRow}>
-                                        <button
-                                          className={styles.buyTicketsButton}
+                                        <Button
                                           onClick={() => handleNonCompBuy(slot)}
                                           disabled={
-                                            ticketCounts[slot.slot_id] === 0
+                                            (ticketCounts[slot.slot_id] || 0) === 0
                                           }
                                         >
                                           Buy Tickets
-                                        </button>
+                                        </Button>
                                       </div>
-                                    </>
-                                  )}
-                                </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div>No tickets available.</div>
+                                )
                               ) : (
-                                <div>No tickets available.</div>
-                              )
-                            ) : (
-                              <div style={{ color: "#888", padding: "1rem 0" }}>
-                                Signings not open for this slot.
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div>No slots available.</div>
-                  )}
+                                <div className="text-muted-foreground">
+                                  Signings not open for this slot.
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    ) : (
+                      <div>No slots available.</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              </TabsContent>
+            </Tabs>
+          </CardHeader>
+        </Card>
       </div>
     </div>
   );

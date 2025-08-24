@@ -1,6 +1,15 @@
-import styles from "./YourSignings.module.scss";
-import Navbar from "../ComComponent/Navbar/Navbar";
+import Navbar from "../ComComponent/Navbar/NewNavbar";
 import ErrorModal from "../ComComponent/ErrorModal/ErrorModal";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 import axios from "axios";
 import { apiBaseURL } from "../../global";
@@ -30,11 +39,11 @@ function YourSignings() {
         </ErrorModal>
       )}
       <Navbar />
-      <div className={styles.tableContainer}>
-        <h1 className={styles.pageTitle}>Your Signings</h1>
+      <div className="container mx-auto px-4 md:px-6 py-8">
+        <h1 className="text-3xl font-bold">Your Signings</h1>
         {eventData?.isError && (
-          <div className={styles.errorMessage}>
-            <h2>WHOOPS!</h2>
+          <div className="text-red-500 mt-4">
+            <h2 className="font-bold text-xl">WHOOPS!</h2>
             <p>
               {eventData.message ||
                 "An error occurred while fetching signings."}
@@ -44,40 +53,28 @@ function YourSignings() {
         {!eventData?.isError &&
           (eventData.data.prof_show_tickets ||
             eventData.data.non_comp_tickets) && (
-            <table>
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Price</th>
-                  {/* <th>Time Slot</th> */}
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {eventData.data.prof_show_tickets?.map((event, index) => (
-                  <tr key={index}>
-                    <td>{event.show_name}</td>
-                    <td>&#x20B9;{event.price}</td>
-                    {/* <td>{event.timeSlot}</td> */}
-                    <td>
-                      <button
-                        className={`${styles.status} ${
-                          event.cancelled ? styles.cancelled : styles.confirmed
-                        }`}
-                      >
+                  <TableRow key={index}>
+                    <TableCell>{event.show_name}</TableCell>
+                    <TableCell>&#x20B9;{event.price}</TableCell>
+                    <TableCell>
+                      <Badge variant={event.cancelled ? "destructive" : "default"}>
                         {event.cancelled ? "Cancelled" : "Confirmed"}
-                      </button>
-                    </td>
-                    <td>
-                      <button
-                        className={`${styles.cancel} ${
-                          event.cancelled ||
-                          !event.cancellable ||
-                          (isSubmitting && currentEvent === `A-${index}`)
-                            ? styles.disabled
-                            : ""
-                        }`}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="destructive"
                         disabled={
                           event.cancelled || !event.cancellable || isSubmitting
                         }
@@ -101,33 +98,22 @@ function YourSignings() {
                             ? "Cancelling"
                             : "Cancel"
                           : "Can't Cancel"}
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {eventData.data.non_comp_tickets?.map((event, index) => (
-                  <tr key={index}>
-                    <td>{event.non_comp_name}</td>
-                    <td>&#x20B9;{event.price}</td>
-                    {/* <td>{event.timeSlot}</td> */}
-                    <td>
-                      <button
-                        className={`${styles.status} ${
-                          event.cancelled ? styles.cancelled : styles.confirmed
-                        }`}
-                      >
+                  <TableRow key={index}>
+                    <TableCell>{event.non_comp_name}</TableCell>
+                    <TableCell>&#x20B9;{event.price}</TableCell>
+                    <TableCell>
+                      <Badge variant={event.cancelled ? "destructive" : "default"}>
                         {event.cancelled ? "Cancelled" : "Confirmed"}
-                      </button>
-                    </td>
-                    <td>
-                      <button
-                        className={`${styles.cancel} ${
-                          event.cancelled ||
-                          !event.cancellable ||
-                          (isSubmitting && currentEvent === `B-${index}`)
-                            ? styles.disabled
-                            : ""
-                        }`}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="destructive"
                         disabled={
                           event.cancelled || !event.cancellable || isSubmitting
                         }
@@ -151,19 +137,19 @@ function YourSignings() {
                             ? "Cancelling"
                             : "Cancel"
                           : "Can't Cancel"}
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         {!eventData?.isError &&
           !eventData.data.prof_show_tickets &&
           !eventData.data.non_comp_tickets && (
-            <div className={styles.errorMessage}>
-              <h2>No Signings Found</h2>
-              <p>You have not signed up for any events yet.</p>
+            <div className="text-center mt-8">
+              <h2 className="text-2xl font-bold">No Signings Found</h2>
+              <p className="text-muted-foreground">You have not signed up for any events yet.</p>
             </div>
           )}
       </div>
