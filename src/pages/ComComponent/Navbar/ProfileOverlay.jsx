@@ -9,7 +9,7 @@ export default function ProfileOverlay({children, className}) {
   const submit = useSubmit();
   // const { globalAppStates, setGlobalAppStates } = useContext(AppContext);
   // console.log(globalAppStates);
-  
+
   const token = useRouteLoaderData("root");
   const {username, profilePicURL} = getUserDetails();
 
