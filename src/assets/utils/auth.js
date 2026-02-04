@@ -21,7 +21,6 @@ export function getRefreshToken() {
 
 export function UpdateAccessToken() {
     const refreshToken = getRefreshToken();
-    console.log(refreshToken);
   if (!refreshToken) {
     console.error("No refresh token found");
     return null;
@@ -32,9 +31,7 @@ export function UpdateAccessToken() {
       { refresh: refreshToken, headers: { accept: "application/json" } }
     )
         .then((response) => {
-        console.log("Response from UpdateAccessToken:", response.data);
         if (response.data.access) {
-          console.log(response.data)
         localStorage.setItem("accessToken", response.data.access);
         return response.data.access;
       } else {
@@ -103,8 +100,8 @@ export function logoutAction() {
             Authorization: `Bearer ${accessToken}`, // Add Authorization header
           },
         }
-      )        .then((response) => {
-            console.log("Logout successful:", response.data);
+      )        .then(() => {
+            // Logout successful
         })
         .catch((error) => {
             console.error("Error during logout:", error.response?.data || error.message);

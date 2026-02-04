@@ -75,7 +75,6 @@ export const showLoadingToast = (message = 'Loading...', options = {}) => {
  * @param {object} options - Additional toast options
  */
 export const handleApiErrorToast = (error, defaultMessage = "An unexpected error occurred", options = {}) => {
-  console.log('Toast: Handling API error:', error);
   let errorMessage = defaultMessage;
 
   // Check for invalid token error and logout automatically
@@ -87,7 +86,6 @@ export const handleApiErrorToast = (error, defaultMessage = "An unexpected error
     if (errorString.includes('Given token not valid for any token type') || 
         errorString.includes('token_not_valid') ||
         (errorData.detail && errorData.detail.includes('Given token not valid'))) {
-      console.log('Toast: Invalid token detected, logging out...');
       showErrorToast('Your session has expired. Please sign in again.');
       setTimeout(() => {
         logoutAction();
@@ -100,7 +98,6 @@ export const handleApiErrorToast = (error, defaultMessage = "An unexpected error
   // Extract error message from various API response formats
   if (error.response?.data) {
     const errorData = error.response.data;
-    console.log('Toast: Error data:', errorData);
     
     // Prioritize API error messages - check multiple possible fields
     const apiErrorMessage = 
@@ -110,28 +107,23 @@ export const handleApiErrorToast = (error, defaultMessage = "An unexpected error
       errorData.error_description; // OAuth style errors
     
     if (apiErrorMessage && typeof apiErrorMessage === 'string' && apiErrorMessage.trim()) {
-      console.log('Toast: Found API error message:', apiErrorMessage);
       errorMessage = apiErrorMessage.trim();
     } else if (typeof errorData === 'string' && errorData.trim()) {
-      console.log('Toast: Error data is string:', errorData);
       errorMessage = errorData.trim();
     } else if (Array.isArray(errorData) && errorData.length > 0) {
       errorMessage = errorData.join(', ');
-      console.log('Toast: Array error message:', errorMessage);
     } else if (typeof errorData === 'object') {
       const errorValues = Object.values(errorData)
         .flat()
         .filter(val => typeof val === 'string' && val.trim());
       if (errorValues.length > 0) {
         errorMessage = errorValues.join(', ');
-        console.log('Toast: Object error message:', errorMessage);
       }
     }
   }
 
   // Handle HTTP status codes only if no API error message was found
   if (error.response?.status && errorMessage === defaultMessage) {
-    console.log('Toast: No API error message found, using status code:', error.response.status);
     switch (error.response.status) {
       case 400:
         errorMessage = "Invalid request. Please check your input and try again.";
@@ -166,7 +158,6 @@ export const handleApiErrorToast = (error, defaultMessage = "An unexpected error
 
   // Handle network errors
   if (error.message && errorMessage === defaultMessage) {
-    console.log('Toast: Using error message:', error.message);
     if (error.message.includes('Network Error')) {
       errorMessage = "Network error. Please check your internet connection.";
     } else if (error.message.includes('timeout')) {
@@ -176,8 +167,7 @@ export const handleApiErrorToast = (error, defaultMessage = "An unexpected error
     }
   }
 
-  console.error('API Error:', error);
-  console.log('Toast: Final error message:', errorMessage);
+  console.error('API Error:', error.message);
   return showErrorToast(errorMessage, options);
 };
 
