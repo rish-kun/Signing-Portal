@@ -19,6 +19,78 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
+const EventCard = ({ event }) => (
+    <Card className="group hover:shadow-lg transition-all duration-300 border hover:scale-105 hover:border-primary/30">
+        <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+                <CardTitle className="text-subheading group-hover:text-primary transition-colors">
+                    {event.name}
+                </CardTitle>
+                <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                    Event
+                </Badge>
+            </div>
+            <CardDescription className="text-body-small line-clamp-2">
+                {event.description || "No description available"}
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 text-caption">
+                    <div className="flex items-center space-x-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>Available</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        <Users className="h-4 w-4" />
+                        <span>Open</span>
+                    </div>
+                </div>
+                <Button
+                    asChild
+                    className="font-medium transition-all duration-300 hover:scale-105"
+                >
+                    <Link to={`/EventDetails/non-comp/${event.id}`}>
+                        View Details
+                    </Link>
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+);
+
+const LoadingSkeleton = () => (
+    <Card>
+        <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-2/3" />
+                <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex space-x-4">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-9 w-24" />
+            </div>
+        </CardContent>
+    </Card>
+);
+
+const EmptyState = ({ message }) => (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="rounded-full bg-muted p-3 mb-4">
+            <Calendar className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-heading-tertiary mb-2">No events found</h3>
+        <p className="text-body text-muted-foreground max-w-md">{message}</p>
+    </div>
+);
+
 function Events() {
     const [eventList, setEventList] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -81,78 +153,6 @@ function Events() {
             console.log(errResponse);
         });
     }, [accessToken]);
-
-    const EventCard = ({ event }) => (
-        <Card className="group hover:shadow-lg transition-all duration-300 border hover:scale-105 hover:border-primary/30">
-            <CardHeader className="space-y-1">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-subheading group-hover:text-primary transition-colors">
-                        {event.name}
-                    </CardTitle>
-                    <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                        Event
-                    </Badge>
-                </div>
-                <CardDescription className="text-body-small line-clamp-2">
-                    {event.description || "No description available"}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-caption">
-                        <div className="flex items-center space-x-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>Available</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                            <Users className="h-4 w-4" />
-                            <span>Open</span>
-                        </div>
-                    </div>
-                    <Button 
-                        asChild 
-                        className="font-medium transition-all duration-300 hover:scale-105"
-                    >
-                        <Link to={`/EventDetails/non-comp/${event.id}`}>
-                            View Details
-                        </Link>
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
-
-    const LoadingSkeleton = () => (
-        <Card>
-            <CardHeader className="space-y-1">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-6 w-2/3" />
-                    <Skeleton className="h-5 w-16" />
-                </div>
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex space-x-4">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-16" />
-                    </div>
-                    <Skeleton className="h-9 w-24" />
-                </div>
-            </CardContent>
-        </Card>
-    );
-
-    const EmptyState = ({ message }) => (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-muted p-3 mb-4">
-                <Calendar className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-heading-tertiary mb-2">No events found</h3>
-            <p className="text-body text-muted-foreground max-w-md">{message}</p>
-        </div>
-    );
 
     return (
         <div className="min-h-screen bg-app-gradient">
