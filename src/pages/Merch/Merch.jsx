@@ -117,7 +117,7 @@ function Merch() {
                     <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
                         <img 
                             src={images[currentImageIndex]} 
-                            alt={merch.name}
+                            alt={`${merch.name} - View ${currentImageIndex + 1} of ${images.length}`}
                             className="w-full h-full object-cover"
                         />
                         {images.length > 1 && (
@@ -127,6 +127,7 @@ function Merch() {
                                     size="icon"
                                     className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
                                     onClick={prevImage}
+                                    aria-label="Previous image"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
@@ -135,6 +136,7 @@ function Merch() {
                                     size="icon"
                                     className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
                                     onClick={nextImage}
+                                    aria-label="Next image"
                                 >
                                     <ChevronLeft className="h-4 w-4 rotate-180" />
                                 </Button>
@@ -161,7 +163,10 @@ function Merch() {
                             asChild 
                             className="font-medium transition-all duration-300 hover:scale-105"
                         >
-                            <Link to={`/EventDetails/merch/${merch.id}`}>
+                            <Link
+                                to={`/EventDetails/merch/${merch.id}`}
+                                aria-label={`View details for ${merch.name}`}
+                            >
                                 View Details
                             </Link>
                         </Button>
