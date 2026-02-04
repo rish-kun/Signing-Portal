@@ -9,7 +9,6 @@ import {
   Phone,
   Copy
 } from "lucide-react";
-import Navbar from "../ComComponent/Navbar/Navbar";
 import { showSuccessToast, showErrorToast } from "../../assets/utils/toast";
 
 function Contact() {
@@ -138,9 +137,7 @@ function Contact() {
 
   return (
     <div className="min-h-screen bg-app-gradient">
-      <Navbar />
-      
-      <div className="pt-20 pb-8">
+      <div className="pt-8 md:pt-12 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">

@@ -1,4 +1,3 @@
-import Navbar from "../ComComponent/Navbar/Navbar";
 import axios from "axios";
 import { apiBaseURL, merchBaseURL } from "../../global";
 import { extractErrorMessage } from "../../assets/utils/errorHandling.js";
@@ -12,21 +11,32 @@ import {
 } from "react-router";
 import { useState, useEffect } from "react";
 import { getAccessToken, getRefreshToken } from "../../assets/utils/auth.js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, Calendar, IndianRupee, AlertCircle, CheckCircle, XCircle, MapPin } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Ticket, Calendar, IndianRupee, AlertCircle, CheckCircle, XCircle, MapPin, ShoppingBag, Clock, QrCode, Clipboard } from "lucide-react";
 
 function YourSignings() {
-  const [currentEvent, setcurrentEvent] = useState("A-1");
-  const [currentMerch, setCurrentMerch] = useState("merch-1");
   const eventData = useLoaderData();
   const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [itemToCancel, setItemToCancel] = useState(null); // { type: 'ticket'|'merch', id: string, index: number }
 
   // Show toast notifications for action results
   useEffect(() => {
@@ -34,8 +44,26 @@ function YourSignings() {
       showErrorToast(actionData.message);
     } else if (actionData && !actionData.isError) {
       showSuccessToast(actionData.message);
+      setCancelDialogOpen(false);
+      setItemToCancel(null);
     }
   }, [actionData]);
+
+  const confirmCancellation = () => {
+    if (!itemToCancel) return;
+
+    const formData = new FormData();
+    if (itemToCancel.type === 'ticket') {
+        formData.append(`non_comp_ticket_id`, itemToCancel.id);
+    } else {
+        formData.append(`merch_ticket_id`, itemToCancel.id);
+    }
+
+    submit(formData, {
+      method: "post",
+      action: "/yoursignings",
+    });
+  };
 
   const getStatusBadge = (cancelled) => {
     if (cancelled) {
@@ -54,28 +82,7 @@ function YourSignings() {
     );
   };
 
-  const handleCancelTicket = (ticketId, index) => {
-    setcurrentEvent(`non_comp-${index}`);
-    const formData = new FormData();
-    formData.append(`non_comp_ticket_id`, ticketId);
-    submit(formData, {
-      method: "post",
-      action: "/yoursignings",
-    });
-  };
-
-  const handleCancelMerch = (merchTicketId, index) => {
-    setCurrentMerch(`merch-${index}`);
-    const formData = new FormData();
-    formData.append(`merch_ticket_id`, merchTicketId);
-    submit(formData, {
-      method: "post",
-      action: "/yoursignings",
-    });
-  };
-
   const TicketCard = ({ ticket, index }) => {
-    const isProcessing = isSubmitting && currentEvent === `non_comp-${index}`;
     const canCancel = ticket.cancellable && !ticket.cancelled;
 
     // Format timestamp
@@ -97,8 +104,8 @@ function YourSignings() {
       if (!timeSlot) return '';
       const date = new Date(timeSlot);
       return date.toLocaleString('en-US', { 
-        year: 'numeric',
-        month: 'long',
+        weekday: 'short',
+        month: 'short',
         day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
@@ -107,118 +114,88 @@ function YourSignings() {
     };
 
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105 border hover:border-primary/30">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
+      <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md border-l-4 border-l-primary">
+        <div className="absolute top-0 right-0 p-4">
+             {getStatusBadge(ticket.cancelled)}
+        </div>
+
+        <CardHeader className="pb-2 pt-6">
+          <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <CardTitle className="text-subheading flex items-center gap-2 group-hover:text-primary transition-colors">
-                <Ticket className="h-5 w-5 text-primary" />
+               <Badge variant="outline" className="mb-2 w-fit">Event Ticket</Badge>
+              <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
                 {ticket.non_comp_name}
               </CardTitle>
-              <CardDescription className="text-body-small">
-                Non-Competitive Event
+              <CardDescription className="flex items-center gap-2">
+                 <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">ID: {ticket.ticket_id}</span>
+                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                     navigator.clipboard.writeText(ticket.ticket_id);
+                     showSuccessToast("Copied Ticket ID");
+                 }}>
+                     <Clipboard className="h-3 w-3" />
+                 </Button>
               </CardDescription>
             </div>
-            {getStatusBadge(ticket.cancelled)}
           </div>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {/* Event Time Slot */}
-          {ticket.time_slot && (
-            <>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="font-medium">Event Time:</span>
-                <span className="text-muted-foreground">{formatTimeSlot(ticket.time_slot)}</span>
-              </div>
-              <Separator />
-            </>
-          )}
-
-          {/* Venue */}
-          {ticket.venue && (
-            <>
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="font-medium">Venue:</span>
-                <span className="text-muted-foreground">{ticket.venue}</span>
-              </div>
-              <Separator />
-            </>
-          )}
-
-          {ticket.price > 0 && (
-            <>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4" />
-                  <span className="font-medium">{ticket.price}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Time</p>
+                    <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span>{ticket.time_slot ? formatTimeSlot(ticket.time_slot) : "Time TBD"}</span>
+                    </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Ticket ID: {ticket.ticket_id}
-                </div>
-              </div>
-              
-              <Separator />
-            </>
-          )}
-          {ticket.price === 0 && (
-            <>
-              <Alert className="bg-green-500/10 border-green-500/30">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-600">
-                  This event is free of charge!
-                </AlertDescription>
-              </Alert>
-              <div className="flex items-center justify-end">
-                <div className="text-sm text-muted-foreground">
-                  Ticket ID: {ticket.ticket_id}
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
 
-          {/* Purchase Timestamp */}
-          {ticket.timestamp && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>Purchased: {formatTimestamp(ticket.timestamp)}</span>
+                 <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Venue</p>
+                    <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span>{ticket.venue || "Venue TBD"}</span>
+                    </div>
+                </div>
             </div>
-          )}
-          
-          {ticket.timestamp && <Separator />}
-          
-          <div className="flex items-center justify-between">
-            <div className="text-caption">
-              {canCancel ? "Cancellation available" : ticket.cancelled ? "Ticket cancelled" : "Cannot be cancelled"}
+
+            <Separator />
+
+            <div className="flex justify-between items-center">
+                 <div className="flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-bold text-lg">{ticket.price > 0 ? ticket.price : "Free"}</span>
+                 </div>
+
+                 {/* QR Code Placeholder (if applicable) */}
+                 <Button variant="ghost" size="sm" className="text-xs gap-1 h-8">
+                     <QrCode className="h-3 w-3" />
+                     Show QR
+                 </Button>
             </div>
-            <Button
-              variant={canCancel ? "destructive" : "secondary"}
-              size="sm"
-              disabled={!canCancel || isSubmitting}
-              onClick={() => canCancel && handleCancelTicket(ticket.ticket_id, index)}
-              className="min-w-[100px] transition-all duration-300 hover:scale-105"
-            >
-              {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Cancelling
-                </div>
-              ) : canCancel ? (
-                "Cancel"
-              ) : (
-                "Can't Cancel"
-              )}
-            </Button>
-          </div>
         </CardContent>
+
+        <CardFooter className="bg-muted/30 p-4 flex justify-between items-center">
+             <div className="text-xs text-muted-foreground">
+                Purchased: {formatTimestamp(ticket.timestamp)}
+             </div>
+             {canCancel && (
+                 <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                        setItemToCancel({ type: 'ticket', id: ticket.ticket_id, index });
+                        setCancelDialogOpen(true);
+                    }}
+                >
+                    Cancel Ticket
+                </Button>
+             )}
+        </CardFooter>
       </Card>
     );
   };
 
   const MerchCard = ({ merch, index }) => {
-    const isProcessing = isSubmitting && currentMerch === `merch-${index}`;
     const canCancel = merch.cancellable && !merch.cancelled;
     const displaySize = merch.size === "A" ? "Universal" : merch.size;
 
@@ -237,206 +214,212 @@ function YourSignings() {
     };
 
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105 border hover:border-primary/30">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-subheading flex items-center gap-2 group-hover:text-primary transition-colors">
-                <Ticket className="h-5 w-5 text-purple-600" />
-                {merch.merch_name}
-              </CardTitle>
-              <CardDescription className="text-body-small">
-                Merchandise{displaySize ? ` • Size: ${displaySize}` : ''}{merch.quantity ? ` • Qty: ${merch.quantity}` : ''}
-              </CardDescription>
+      <Card className="group flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-md border-l-4 border-l-secondary">
+         {/* Image Section */}
+         <div className="w-full md:w-48 h-48 md:h-auto bg-muted shrink-0 relative">
+             {merch.merch_image_url ? (
+                 <img
+                    src={merch.merch_image_url}
+                    alt={merch.merch_name}
+                    className="w-full h-full object-cover"
+                 />
+             ) : (
+                 <div className="w-full h-full flex items-center justify-center">
+                     <ShoppingBag className="h-10 w-10 text-muted-foreground/50" />
+                 </div>
+             )}
+              <div className="absolute top-2 right-2 md:hidden">
+                {getStatusBadge(merch.cancelled)}
             </div>
-            {getStatusBadge(merch.cancelled)}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Merch Image */}
-          {merch.merch_image_url && (
-            <div className="w-full h-32 bg-muted rounded-lg overflow-hidden">
-              <img 
-                src={merch.merch_image_url} 
-                alt={merch.merch_name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          
-          {merch.price > 0 && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="h-4 w-4" />
-                <span className="font-medium">{merch.price}</span>
-              </div>
-              {merch.quantity && (
-                <div className="text-sm text-muted-foreground">
-                  Qty: {merch.quantity}
-                </div>
-              )}
-            </div>
-          )}
+         </div>
 
-          {merch.price === 0 && (
-            <Alert className="bg-green-500/10 border-green-500/30">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-600">
-                This merch is free of charge!
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Purchase Timestamp */}
-          {merch.timestamp && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>Purchased: {formatTimestamp(merch.timestamp)}</span>
-            </div>
-          )}
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="text-caption">
-              {canCancel ? "Cancellation available" : merch.cancelled ? "Merch cancelled" : "Cannot be cancelled"}
-            </div>
-            <Button
-              variant={canCancel ? "destructive" : "secondary"}
-              size="sm"
-              disabled={!canCancel || isSubmitting}
-              onClick={() => canCancel && handleCancelMerch(merch.id, index)}
-              className="min-w-[100px] transition-all duration-300 hover:scale-105"
-            >
-              {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Cancelling
+        <div className="flex-1 flex flex-col">
+            <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 mb-1">
+                             <Badge variant="outline" className="w-fit">Merchandise</Badge>
+                             <div className="hidden md:block">
+                                 {getStatusBadge(merch.cancelled)}
+                             </div>
+                        </div>
+                        <CardTitle className="text-xl font-bold group-hover:text-secondary transition-colors">
+                            {merch.merch_name}
+                        </CardTitle>
+                        <CardDescription>
+                            Order ID: {merch.id}
+                        </CardDescription>
+                    </div>
                 </div>
-              ) : canCancel ? (
-                "Cancel"
-              ) : (
-                "Can't Cancel"
-              )}
-            </Button>
-          </div>
-        </CardContent>
+            </CardHeader>
+
+            <CardContent className="flex-1 space-y-4">
+                <div className="flex flex-wrap gap-4">
+                    {displaySize && (
+                        <div className="bg-muted px-3 py-1 rounded-md text-sm">
+                            <span className="text-muted-foreground mr-1">Size:</span>
+                            <span className="font-medium">{displaySize}</span>
+                        </div>
+                    )}
+                    {merch.quantity && (
+                         <div className="bg-muted px-3 py-1 rounded-md text-sm">
+                            <span className="text-muted-foreground mr-1">Qty:</span>
+                            <span className="font-medium">{merch.quantity}</span>
+                        </div>
+                    )}
+                </div>
+
+                {merch.is_customised && (
+                    <div className="text-sm bg-secondary/10 p-2 rounded border border-secondary/20">
+                        <span className="font-medium text-secondary-foreground">Customization: </span>
+                        {merch.customisation_text}
+                    </div>
+                )}
+            </CardContent>
+
+            <CardFooter className="bg-muted/30 p-4 flex justify-between items-center mt-auto">
+                <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Ordered: {formatTimestamp(merch.timestamp)}</span>
+                    <div className="flex items-center gap-1 font-bold">
+                        <IndianRupee className="h-3 w-3" />
+                        {merch.price}
+                    </div>
+                </div>
+                {canCancel && (
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                            setItemToCancel({ type: 'merch', id: merch.id, index });
+                            setCancelDialogOpen(true);
+                        }}
+                    >
+                        Cancel Order
+                    </Button>
+                )}
+            </CardFooter>
+        </div>
       </Card>
     );
   };
 
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-muted p-3 mb-4">
-        <Ticket className="h-8 w-8 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in zoom-in duration-500">
+      <div className="rounded-full bg-muted p-4 mb-6">
+        <Ticket className="h-10 w-10 text-muted-foreground" />
       </div>
       <h3 className="text-heading-tertiary mb-2">No Signings Found</h3>
-      <p className="text-body text-muted-foreground max-w-md mb-6">
-        You haven't signed up for any events yet. Browse available events to get started.
+      <p className="text-body text-muted-foreground max-w-md mb-8">
+        You haven't signed up for any events or purchased merch yet.
       </p>
-      <Button asChild className="transition-all duration-300 hover:scale-105">
-        <a href="/">Browse Events</a>
-      </Button>
+      <div className="flex gap-4">
+          <Button asChild variant="default">
+            <a href="/events">Browse Events</a>
+          </Button>
+           <Button asChild variant="outline">
+            <a href="/">Shop Merch</a>
+          </Button>
+      </div>
     </div>
   );
 
   const ErrorState = ({ message }) => (
-    <Alert className="border-red-600/30 bg-red-600/10 max-w-2xl mx-auto">
-      <AlertCircle className="h-4 w-4 text-red-400" />
-      <AlertDescription className="text-red-300">
-        <div className="space-y-2">
-          <p className="font-semibold">WHOOPS!</p>
-          <p>{message || "An error occurred while fetching signings."}</p>
-        </div>
-      </AlertDescription>
-    </Alert>
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+        <Alert className="border-destructive/30 bg-destructive/10 max-w-lg w-full">
+        <AlertCircle className="h-4 w-4 text-destructive" />
+        <AlertTitle>Error Loading Dashboard</AlertTitle>
+        <AlertDescription className="text-destructive-foreground/80">
+            {message || "An error occurred while fetching your signings."}
+        </AlertDescription>
+        </Alert>
+        <Button onClick={() => window.location.reload()} variant="link" className="mt-4">
+            Try Again
+        </Button>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-app-gradient">
-      <Navbar />
-      
-      <div className="pt-20 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-app-gradient pb-20 md:pb-8 pt-8">
+        <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-heading-primary mb-4 flex items-center justify-center gap-3">
-              <Ticket className="h-10 w-10 text-primary" />
-              Your Signings
-            </h1>
-            <p className="text-body-large text-muted-foreground max-w-2xl mx-auto">
-              Manage your event registrations
-            </p>
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Your Dashboard</h1>
+            <p className="text-muted-foreground">Manage your tickets and orders</p>
           </div>
 
           {/* Content */}
           {eventData?.isError ? (
             <ErrorState message={eventData.message} />
           ) : (
-            <div className="space-y-6">
-              {/* Success Message */}
-              {actionData && !actionData.isError && (
-                <Alert className="border-green-600/30 bg-green-600/10 max-w-2xl mx-auto">
-                  <CheckCircle className="h-4 w-4 text-green-400" />
-                  <AlertDescription className="text-green-300">
-                    {actionData.message}
-                  </AlertDescription>
-                </Alert>
-              )}
+            <>
+                {(!eventData.data.non_comp_tickets?.length && !eventData.data.merch_tickets?.length) ? (
+                    <EmptyState />
+                ) : (
+                    <Tabs defaultValue="tickets" className="space-y-6">
+                        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+                            <TabsTrigger value="tickets">
+                                Events ({eventData.data.non_comp_tickets?.length || 0})
+                            </TabsTrigger>
+                            <TabsTrigger value="merch">
+                                Merchandise ({eventData.data.merch_tickets?.length || 0})
+                            </TabsTrigger>
+                        </TabsList>
 
-              {/* Events */}
-              {eventData.data.non_comp_tickets && eventData.data.non_comp_tickets.length > 0 && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-heading-secondary">Your Event Tickets</h2>
-                    <Badge variant="outline">
-                      {eventData.data.non_comp_tickets.length} ticket{eventData.data.non_comp_tickets.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {eventData.data.non_comp_tickets.map((ticket, index) => (
-                      <TicketCard 
-                        key={index} 
-                        ticket={ticket} 
-                        index={index} 
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+                        <TabsContent value="tickets" className="space-y-4 animate-in slide-in-from-left-4 duration-500">
+                             {eventData.data.non_comp_tickets?.length > 0 ? (
+                                 <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+                                     {eventData.data.non_comp_tickets.map((ticket, index) => (
+                                        <TicketCard key={index} ticket={ticket} index={index} />
+                                     ))}
+                                 </div>
+                             ) : (
+                                 <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                                     <p className="text-muted-foreground">No active event tickets</p>
+                                      <Button variant="link" asChild className="mt-2"><a href="/events">Browse Events</a></Button>
+                                 </div>
+                             )}
+                        </TabsContent>
 
-              {/* Merch */}
-              {eventData.data.merch_tickets && eventData.data.merch_tickets.length > 0 && (
-                <div className="space-y-6 mt-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-heading-secondary">Your Merch</h2>
-                    <Badge variant="outline" className="bg-purple-500/10 border-purple-500/30">
-                      {eventData.data.merch_tickets.length} item{eventData.data.merch_tickets.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {[...eventData.data.merch_tickets]
-                      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                      .map((merch, index) => (
-                        <MerchCard 
-                          key={index} 
-                          merch={merch} 
-                          index={index} 
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Empty State - show only if both are empty */}
-              {(!eventData.data.non_comp_tickets || eventData.data.non_comp_tickets.length === 0) && 
-               (!eventData.data.merch_tickets || eventData.data.merch_tickets.length === 0) && (
-                <EmptyState />
-              )}
-            </div>
+                        <TabsContent value="merch" className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                             {eventData.data.merch_tickets?.length > 0 ? (
+                                 <div className="space-y-4">
+                                     {[...eventData.data.merch_tickets]
+                                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                                        .map((merch, index) => (
+                                            <MerchCard key={index} merch={merch} index={index} />
+                                     ))}
+                                 </div>
+                             ) : (
+                                  <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                                     <p className="text-muted-foreground">No merchandise orders</p>
+                                     <Button variant="link" asChild className="mt-2"><a href="/">Shop Merch</a></Button>
+                                 </div>
+                             )}
+                        </TabsContent>
+                    </Tabs>
+                )}
+            </>
           )}
         </div>
-      </div>
+
+        {/* Cancellation Dialog */}
+        <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirm Cancellation</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to cancel this {itemToCancel?.type === 'ticket' ? 'ticket' : 'order'}?
+                        This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setCancelDialogOpen(false)} disabled={isSubmitting}>Keep it</Button>
+                    <Button variant="destructive" onClick={confirmCancellation} disabled={isSubmitting}>
+                        {isSubmitting ? "Cancelling..." : "Yes, Cancel"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
@@ -466,7 +449,7 @@ export async function loader({ request }) {
           accept: "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-      }).catch(() => ({ data: [] })) // Handle if merch endpoint fails
+      }).catch(() => ({ data: [] }))
     ]);
     
     return {

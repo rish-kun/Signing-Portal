@@ -1,38 +1,38 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;500;600;700&display=swap");
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
   
   /* Typography Hierarchy */
   h1 {
-    @apply text-4xl font-bold tracking-tight;
+    @apply font-heading text-4xl font-bold tracking-tight;
   }
   
   h2 {
-    @apply text-3xl font-semibold tracking-tight;
+    @apply font-heading text-3xl font-semibold tracking-tight;
   }
   
   h3 {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply font-heading text-2xl font-semibold tracking-tight;
   }
   
   h4 {
-    @apply text-xl font-semibold tracking-tight;
+    @apply font-heading text-xl font-semibold tracking-tight;
   }
   
   h5 {
-    @apply text-lg font-semibold tracking-tight;
+    @apply font-heading text-lg font-semibold tracking-tight;
   }
   
   h6 {
-    @apply text-base font-semibold tracking-tight;
+    @apply font-heading text-base font-semibold tracking-tight;
   }
   
   p {
@@ -41,19 +41,19 @@
   
   /* Custom Typography Classes */
   .text-heading-primary {
-    @apply text-4xl font-bold text-foreground tracking-tight;
+    @apply font-heading text-4xl font-bold text-foreground tracking-tight;
   }
   
   .text-heading-secondary {
-    @apply text-3xl font-semibold text-foreground tracking-tight;
+    @apply font-heading text-3xl font-semibold text-foreground tracking-tight;
   }
   
   .text-heading-tertiary {
-    @apply text-2xl font-semibold text-foreground tracking-tight;
+    @apply font-heading text-2xl font-semibold text-foreground tracking-tight;
   }
   
   .text-subheading {
-    @apply text-xl font-semibold text-foreground tracking-tight;
+    @apply font-heading text-xl font-semibold text-foreground tracking-tight;
   }
   
   .text-body-large {
@@ -82,7 +82,7 @@
   
   /* Navigation specific typography */
   .nav-brand {
-    @apply text-xl font-bold text-foreground tracking-tight;
+    @apply font-heading text-xl font-bold text-foreground tracking-tight;
   }
   
   .nav-link {
@@ -122,35 +122,47 @@
   --card-foreground: oklch(0.2046 0 0);
   --popover: oklch(0.9911 0 0);
   --popover-foreground: oklch(0.4386 0 0);
-  --primary: oklch(0.7702 0.1211 251.3246);
-  --primary-foreground: oklch(0.2621 0.0174 255.6766);
-  --secondary: oklch(0.9940 0 0);
+
+  /* Deep Indigo #4F46E5 */
+  --primary: oklch(0.59 0.232 276.5);
+  --primary-foreground: oklch(0.9851 0 0);
+
+  /* Warm Amber #F59E0B */
+  --secondary: oklch(0.78 0.192 78.5);
   --secondary-foreground: oklch(0.2046 0 0);
+
   --muted: oklch(0.9461 0 0);
-  --muted-foreground: oklch(0.2435 0 0);
+  --muted-foreground: oklch(0.38 0 0);
   --accent: oklch(0.9461 0 0);
   --accent-foreground: oklch(0.2435 0 0);
-  --destructive: oklch(0.9061 0.2173 120.9325);
-  --destructive-foreground: oklch(1.0000 0 0);
+
+  --destructive: oklch(0.60 0.20 25.0);
+  --destructive-foreground: oklch(0.9851 0 0);
+
   --border: oklch(0.9037 0 0);
-  --input: oklch(0.9731 0 0);
-  --ring: oklch(0.7702 0.1211 251.3246);
-  --chart-1: oklch(0.7702 0.1211 251.3246);
-  --chart-2: oklch(0.6518 0.2506 309.5570);
+  --input: oklch(0.92 0 0);
+  --ring: oklch(0.59 0.232 276.5);
+
+  --chart-1: oklch(0.59 0.232 276.5);
+  --chart-2: oklch(0.78 0.192 78.5);
   --chart-3: oklch(0.7551 0.1986 340.7108);
   --chart-4: oklch(0.8852 0.2674 137.9410);
   --chart-5: oklch(0.4794 0.2325 262.5870);
+
   --sidebar: oklch(0.9911 0 0);
   --sidebar-foreground: oklch(0.5452 0 0);
-  --sidebar-primary: oklch(0.7702 0.1211 251.3246);
-  --sidebar-primary-foreground: oklch(0.2621 0.0174 255.6766);
+  --sidebar-primary: oklch(0.59 0.232 276.5);
+  --sidebar-primary-foreground: oklch(0.9851 0 0);
   --sidebar-accent: oklch(0.9461 0 0);
   --sidebar-accent-foreground: oklch(0.2435 0 0);
   --sidebar-border: oklch(0.9037 0 0);
-  --sidebar-ring: oklch(0.7702 0.1211 251.3246);
-  --font-sans: Outfit, sans-serif;
+  --sidebar-ring: oklch(0.59 0.232 276.5);
+
+  --font-sans: "Inter", sans-serif;
+  --font-heading: "Poppins", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
+
   --radius: 0.5rem;
   --shadow-x: 0px;
   --shadow-y: 1px;
@@ -171,41 +183,53 @@
 }
 
 .dark {
-  --background: oklch(0.1822 0 0);
-  --foreground: oklch(1.0000 0 0);
-  --card: oklch(0.2046 0 0);
-  --card-foreground: oklch(1.0000 0 0);
-  --popover: oklch(0.2603 0 0);
-  --popover-foreground: oklch(0.7348 0 0);
-  --primary: oklch(0.3139 0.1193 258.5813);
-  --primary-foreground: oklch(0.9812 0.0034 247.8577);
-  --secondary: oklch(0.2603 0 0);
-  --secondary-foreground: oklch(0.9851 0 0);
-  --muted: oklch(0.2393 0 0);
-  --muted-foreground: oklch(0.7122 0 0);
-  --accent: oklch(0.3132 0 0);
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.9851 0 0);
+  --card: oklch(0.16 0 0);
+  --card-foreground: oklch(0.9851 0 0);
+  --popover: oklch(0.16 0 0);
+  --popover-foreground: oklch(0.9851 0 0);
+
+  /* Deep Indigo Lighter for Dark Mode */
+  --primary: oklch(0.65 0.232 276.5);
+  --primary-foreground: oklch(0.9851 0 0);
+
+  /* Warm Amber */
+  --secondary: oklch(0.78 0.192 78.5);
+  --secondary-foreground: oklch(0.2046 0 0);
+
+  --muted: oklch(0.24 0 0);
+  --muted-foreground: oklch(0.70 0 0);
+  --accent: oklch(0.24 0 0);
   --accent-foreground: oklch(0.9851 0 0);
-  --destructive: oklch(0.5105 0.1156 117.0810);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.2809 0 0);
-  --input: oklch(0.2603 0 0);
-  --ring: oklch(0.7581 0.1410 238.1167);
-  --chart-1: oklch(0.7581 0.1410 238.1167);
-  --chart-2: oklch(0.7191 0.1909 307.7062);
+
+  --destructive: oklch(0.55 0.20 25.0);
+  --destructive-foreground: oklch(0.9851 0 0);
+
+  --border: oklch(0.28 0 0);
+  --input: oklch(0.28 0 0);
+  --ring: oklch(0.65 0.232 276.5);
+
+  --chart-1: oklch(0.65 0.232 276.5);
+  --chart-2: oklch(0.78 0.192 78.5);
   --chart-3: oklch(0.8449 0.1223 336.4190);
   --chart-4: oklch(0.8876 0.2545 138.8362);
   --chart-5: oklch(0.4954 0.2819 266.1694);
-  --sidebar: oklch(0.1822 0 0);
-  --sidebar-foreground: oklch(0.6301 0 0);
-  --sidebar-primary: oklch(0.3139 0.1193 258.5813);
-  --sidebar-primary-foreground: oklch(0.9812 0.0034 247.8577);
-  --sidebar-accent: oklch(0.3132 0 0);
+
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.70 0 0);
+  --sidebar-primary: oklch(0.65 0.232 276.5);
+  --sidebar-primary-foreground: oklch(0.9851 0 0);
+  --sidebar-accent: oklch(0.24 0 0);
   --sidebar-accent-foreground: oklch(0.9851 0 0);
-  --sidebar-border: oklch(0.2809 0 0);
-  --sidebar-ring: oklch(0.7581 0.1410 238.1167);
-  --font-sans: Outfit, sans-serif;
+  --sidebar-border: oklch(0.28 0 0);
+  --sidebar-ring: oklch(0.65 0.232 276.5);
+
+  --font-sans: "Inter", sans-serif;
+  --font-heading: "Poppins", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
+
   --radius: 0.5rem;
   --shadow-x: 0px;
   --shadow-y: 1px;
@@ -258,6 +282,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
@@ -292,19 +317,15 @@ body {
   .bg-app-gradient {
     background-color: var(--color-background);
     background-image:
-      radial-gradient(1200px 800px at -10% -10%, color-mix(in oklab, var(--color-primary) 16%, transparent) 0%, transparent 60%),
-      radial-gradient(1000px 600px at 110% 10%, color-mix(in oklab, var(--color-accent) 14%, transparent) 0%, transparent 65%),
-      radial-gradient(900px 700px at 0% 110%, color-mix(in oklab, var(--color-secondary) 10%, transparent) 0%, transparent 60%),
-      linear-gradient(to bottom right, color-mix(in oklab, var(--color-background) 96%, transparent) 0%, var(--color-background) 100%);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+      radial-gradient(1200px 800px at -10% -10%, color-mix(in oklab, var(--color-primary) 10%, transparent) 0%, transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, color-mix(in oklab, var(--color-secondary) 8%, transparent) 0%, transparent 65%),
+      linear-gradient(to bottom, var(--color-background), var(--color-background));
   }
 
   .dark .bg-app-gradient {
     background-image:
-      radial-gradient(1200px 800px at -10% -10%, color-mix(in oklab, var(--color-primary) 26%, transparent) 0%, transparent 60%),
-      radial-gradient(1000px 600px at 110% 10%, color-mix(in oklab, var(--color-accent) 22%, transparent) 0%, transparent 65%),
-      radial-gradient(900px 700px at 0% 110%, color-mix(in oklab, var(--color-secondary) 18%, transparent) 0%, transparent 60%),
-      linear-gradient(to bottom right, color-mix(in oklab, var(--color-background) 85%, transparent) 0%, var(--color-background) 100%);
+      radial-gradient(1200px 800px at -10% -10%, color-mix(in oklab, var(--color-primary) 15%, transparent) 0%, transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, color-mix(in oklab, var(--color-secondary) 12%, transparent) 0%, transparent 65%),
+      linear-gradient(to bottom, var(--color-background), var(--color-background));
   }
 }
