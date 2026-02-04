@@ -11,6 +11,7 @@ import {
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
 import Footer from "./components/Footer.jsx";
+import Navigation from "./components/Navigation";
 
 import SignInContext from "./assets/store/SignInContext.jsx";
 
@@ -36,6 +37,7 @@ const Layout = () => {
 
   return (
     <>
+      <Navigation />
       <Outlet />
       {!hideFooter && <Footer />}
     </>
