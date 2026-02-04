@@ -1,8 +1,7 @@
 import { Link, useNavigate, useLoaderData } from "react-router-dom";
-import Navbar from "../ComComponent/Navbar/Navbar";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronLeft } from "lucide-react";
+import { Calendar, ChevronLeft, Search, Filter } from "lucide-react";
 import { merchBaseURL } from "../../global";
 import { handleApiErrorToast } from "../../assets/utils/toast.js";
 import {
@@ -14,18 +13,26 @@ import {
     checkAccessToken,
     checkRefreshToken,
 } from "../../assets/utils/auth.js";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 function Merch() {
     const [merchList, setMerchList] = useState(null);
+    const [filteredMerchList, setFilteredMerchList] = useState(null);
     const [merchLoading, setMerchLoading] = useState(true);
-    const refreshToken = getRefreshToken();
-    const accessToken = useLoaderData();
     const [emptyMerchMsg, setEmptyMerchMsg] = useState("Loading available merch...");
 
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortOrder, setSortOrder] = useState("default");
+
+    const refreshToken = getRefreshToken();
+    const accessToken = useLoaderData();
     const navigate = useNavigate();
     
     useEffect(() => {
@@ -70,8 +77,11 @@ function Merch() {
         }).then((response) => {
             if (response.data.length === 0) {
                 setEmptyMerchMsg("No merch available at this moment.");
+                setMerchList([]);
+                setFilteredMerchList([]);
             } else {
                 setMerchList(response.data);
+                setFilteredMerchList(response.data);
             }
             setMerchLoading(false);
         }).catch((errResponse) => {
@@ -81,6 +91,25 @@ function Merch() {
             console.log(errResponse);
         });
     }, [accessToken]);
+
+    // Filtering Effect
+    useEffect(() => {
+        if (!merchList) return;
+        let result = [...merchList];
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(m => m.name.toLowerCase().includes(query));
+        }
+
+        if (sortOrder === "price_asc") {
+            result.sort((a, b) => a.price - b.price);
+        } else if (sortOrder === "price_desc") {
+            result.sort((a, b) => b.price - a.price);
+        }
+
+        setFilteredMerchList(result);
+    }, [merchList, searchQuery, sortOrder]);
 
     const MerchCard = ({ merch }) => {
         const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -101,65 +130,68 @@ function Merch() {
         };
 
         return (
-            <Card className="group hover:shadow-lg transition-all duration-300 border hover:scale-105 hover:border-primary/30">
-                <CardHeader className="space-y-1">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-subheading group-hover:text-primary transition-colors">
-                            {merch.name}
-                        </CardTitle>
-                        <Badge variant="secondary" className="bg-purple-500/20 text-purple-600 border-purple-500/30">
-                            Merch
+            <Card className="group h-full overflow-hidden border bg-card shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="relative aspect-square overflow-hidden bg-muted">
+                    <img
+                        src={images[currentImageIndex]}
+                        alt={merch.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    {/* Image Controls */}
+                    {images.length > 1 && (
+                        <div className="absolute inset-0 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
+                                onClick={prevImage}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
+                                onClick={nextImage}
+                            >
+                                <ChevronLeft className="h-4 w-4 rotate-180" />
+                            </Button>
+                        </div>
+                    )}
+                    {/* Dots */}
+                    {images.length > 1 && (
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                            {images.map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`h-1.5 w-1.5 rounded-full shadow-sm transition-all ${
+                                        idx === currentImageIndex
+                                            ? 'bg-white w-3'
+                                            : 'bg-white/60'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    {/* Badge */}
+                    <div className="absolute top-3 left-3">
+                        <Badge className="bg-white/90 text-foreground backdrop-blur-md shadow-sm border-0 font-medium hover:bg-white/100">
+                            {merch.price === 0 ? "Free" : `₹${merch.price}`}
                         </Badge>
                     </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Image Carousel */}
-                    <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
-                        <img 
-                            src={images[currentImageIndex]} 
-                            alt={merch.name}
-                            className="w-full h-full object-cover"
-                        />
-                        {images.length > 1 && (
-                            <div className="group">
-                                <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                                    onClick={prevImage}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                                    onClick={nextImage}
-                                >
-                                    <ChevronLeft className="h-4 w-4 rotate-180" />
-                                </Button>
-                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                                    {images.map((_, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`h-1.5 w-1.5 rounded-full transition-all ${
-                                                idx === currentImageIndex 
-                                                    ? 'bg-white w-3' 
-                                                    : 'bg-white/50'
-                                            }`}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                </div>
+
+                <CardContent className="p-4">
+                    <div className="mb-2">
+                        <h3 className="font-heading font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
+                            {merch.name}
+                        </h3>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1 text-caption">
-                            <span className="font-semibold text-lg">{merch.price === 0 ? '-' : `₹${merch.price}`}</span>
-                        </div>
-                        <Button 
+
+                    <div className="flex items-center justify-between mt-4">
+                         <Button
                             asChild 
-                            className="font-medium transition-all duration-300 hover:scale-105"
+                            className="w-full font-medium shadow-none group-hover:shadow-md transition-all"
                         >
                             <Link to={`/EventDetails/merch/${merch.id}`}>
                                 View Details
@@ -172,72 +204,113 @@ function Merch() {
     };
 
     const LoadingSkeleton = () => (
-        <Card>
-            <CardHeader className="space-y-1">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-6 w-2/3" />
-                    <Skeleton className="h-5 w-16" />
-                </div>
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex space-x-4">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-16" />
-                    </div>
-                    <Skeleton className="h-9 w-24" />
-                </div>
-            </CardContent>
+        <Card className="h-full border-0 shadow-none bg-transparent">
+            <Skeleton className="aspect-square w-full rounded-xl" />
+            <div className="space-y-2 mt-4">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-10 w-full mt-4" />
+            </div>
         </Card>
     );
 
     const EmptyState = ({ message }) => (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-muted p-3 mb-4">
-                <Calendar className="h-8 w-8 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
+            <div className="rounded-full bg-muted/50 p-6 mb-6">
+                <Search className="h-10 w-10 text-muted-foreground" />
             </div>
             <h3 className="text-heading-tertiary mb-2">No merch found</h3>
-            <p className="text-body text-muted-foreground max-w-md">{message}</p>
+            <p className="text-body text-muted-foreground max-w-md mx-auto">{message}</p>
+            {searchQuery && (
+                <Button variant="link" onClick={() => setSearchQuery("")} className="mt-4">
+                    Clear filters
+                </Button>
+            )}
+        </div>
+    );
+
+    const Hero = () => (
+        <div className="relative overflow-hidden rounded-3xl bg-primary text-primary-foreground px-6 py-12 sm:px-12 sm:py-20 mb-8 shadow-2xl isolate">
+            <div className="relative z-10 max-w-2xl">
+                <Badge variant="outline" className="mb-6 text-primary-foreground border-primary-foreground/30 bg-primary-foreground/10 backdrop-blur-sm px-3 py-1">
+                    New Collection 2024
+                </Badge>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 font-heading">
+                    Official Merch Store
+                </h1>
+                <p className="text-lg sm:text-xl text-primary-foreground/90 mb-8 max-w-lg leading-relaxed">
+                    Grab your limited edition gear before it's gone. Represent your campus with style.
+                </p>
+                <Button
+                    size="lg"
+                    variant="secondary"
+                    asChild
+                    className="font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                    <a href="#shop-section">Shop Now</a>
+                </Button>
+            </div>
+
+            {/* Decorative Background Elements */}
+            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/20 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute bottom-0 right-20 -mb-20 w-64 h-64 bg-secondary/30 rounded-full blur-3xl -z-10 mix-blend-overlay"></div>
+            <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl -z-10 mix-blend-overlay"></div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-app-gradient">
-            <Navbar />
-            <div className="pt-20 pb-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="space-y-6">
-                        {/* Header */}
-                        <div className="text-center mb-8">
-                            <h1 className="text-heading-primary mb-4">
-                                Available Merch
-                            </h1>
-                            <p className="text-body-large text-muted-foreground max-w-2xl mx-auto">
-                                Check out our exclusive merchandise collection
-                            </p>
+        <div className="min-h-screen bg-app-gradient pb-20 md:pb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Hero />
+
+                <div id="shop-section" className="space-y-6">
+                    {/* Filters Bar */}
+                    <div className="sticky top-16 sm:top-20 z-30 bg-background/80 backdrop-blur-xl p-4 rounded-xl shadow-sm border border-border/50 transition-all duration-300">
+                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                            <div className="relative w-full sm:max-w-sm">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search merchandise..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 bg-background/50 focus:bg-background transition-colors"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                                <Select value={sortOrder} onValueChange={setSortOrder}>
+                                    <SelectTrigger className="w-full sm:w-[180px] bg-background/50 focus:bg-background">
+                                        <SelectValue placeholder="Sort by" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="default">Featured</SelectItem>
+                                        <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                                        <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        
-                        {merchLoading ? (
-                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {[...Array(6)].map((_, i) => (
-                                    <LoadingSkeleton key={i} />
-                                ))}
-                            </div>
-                        ) : merchList && merchList.length > 0 ? (
-                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {merchList.map((merch, index) => (
-                                    <MerchCard 
-                                        key={index} 
-                                        merch={merch} 
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <EmptyState message={emptyMerchMsg} />
-                        )}
                     </div>
+
+                    {/* Content Grid */}
+                    {merchLoading ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {[...Array(8)].map((_, i) => (
+                                <LoadingSkeleton key={i} />
+                            ))}
+                        </div>
+                    ) : filteredMerchList && filteredMerchList.length > 0 ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {filteredMerchList.map((merch, index) => (
+                                <MerchCard
+                                    key={index}
+                                    merch={merch}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <EmptyState message={searchQuery ? "No items match your search." : emptyMerchMsg} />
+                    )}
                 </div>
             </div>
         </div>
